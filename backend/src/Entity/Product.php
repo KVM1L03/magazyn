@@ -61,6 +61,18 @@ class Product
         return $this;
     }
 
+    public function getName(): ?string
+    {
+        return $this->Product;
+    }
+
+    public function setName(string $name): static
+    {
+        $this->Product = $name;
+
+        return $this;
+    }
+
     /**
      * @return Collection<int, InventoryChange>
      */
