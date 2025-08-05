@@ -1,9 +1,10 @@
+import ProductList from "./components/ProductsList";
 
 function App() {
   return (
-    <h1 className="text-3xl font-bold underline">
-      Hello world!
-    </h1>
+    <div className="bg-gray-950 text-white min-h-screen">
+      <ProductList />
+    </div>
   );
 }
 
