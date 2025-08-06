@@ -3,7 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Product;
-use App\Entity\InventoryChange;
+use App\Service\ProductService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -53,21 +53,12 @@ final class ProductController extends AbstractController
     }
 
     #[Route('/{id}/update', methods: ['POST'])]
-    public function updateStock(Product $product, Request $request, EntityManagerInterface $em): JsonResponse
+    public function updateStock(Product $product, Request $request, ProductService $productService): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
         $amount = $data['amount'];
 
-        $change = new InventoryChange();
-        $change->setProduct($product);
-        $change->setAmount($amount);
-        $change->setCreatedAt(new \DateTimeImmutable());
-
-        $product->setCurrentQuantity($product->getCurrentQuantity() + $amount);
-
-        $em->persist($change);
-        $em->persist($product);
-        $em->flush();
+        $productService->updateStock($product, $amount);
 
         return new JsonResponse(['status' => 'updated']);
     }
