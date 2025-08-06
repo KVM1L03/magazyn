@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchProducts } from '../api/api';
+import EditButton from './EditButton';
 
 interface Product {
   id: number;
@@ -26,6 +27,10 @@ const ProductList: React.FC = () => {
     loadProducts();
   }, []);
 
+  const handleEdit = (productId: number) => {
+    console.log('Edit product:', productId);
+  };
+
   if (loading) {
     return <div className="p-4">Ładowanie listy produktów...</div>;
   }
@@ -39,6 +44,7 @@ const ProductList: React.FC = () => {
             <th className="p-2 border">ID</th>
             <th className="p-2 border">Nazwa</th>
             <th className="p-2 border">Ilość</th>
+            <th className="p-2 border text-center">Akcje</th>
           </tr>
         </thead>
         <tbody>
@@ -47,6 +53,9 @@ const ProductList: React.FC = () => {
               <td className="p-2 border">{prod.id}</td>
               <td className="p-2 border">{prod.name}</td>
               <td className="p-2 border">{prod.quantity}</td>
+              <td className="p-2 border text-right">
+                <EditButton onClick={() => handleEdit(prod.id)} />
+              </td>
             </tr>
           ))}
         </tbody>
