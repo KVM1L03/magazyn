@@ -1,11 +1,34 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { fetchProducts } from '../api/api';
+
+interface Product {
+  id: number;
+  name: string;
+  quantity: number;
+}
 
 const ProductList: React.FC = () => {
-  const products = [
-    { id: 1, name: 'Młotek', quantity: 10 },
-    { id: 2, name: 'Wkrętarka', quantity: 5 },
-    { id: 3, name: 'Piła', quantity: 7 },
-  ];
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const data = await fetchProducts('token123');
+        setProducts(data);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, []);
+
+  if (loading) {
+    return <div className="p-4">Ładowanie listy produktów...</div>;
+  }
 
   return (
     <div className="p-4">
