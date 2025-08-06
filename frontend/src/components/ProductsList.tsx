@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { fetchProducts } from '../api/api';
 import EditButton from './EditButton';
+import AddButton from './AddButton';
+import AddProductModal from './AddProductModal';
 
 interface Product {
   id: number;
@@ -11,25 +13,34 @@ interface Product {
 const ProductList: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchProducts('token123');
+      setProducts(data);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        const data = await fetchProducts('token123');
-        setProducts(data);
-      } catch (error) {
-        console.error('Error fetching products:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadProducts();
   }, []);
 
   const handleEdit = (productId: number) => {
     console.log('Edit product:', productId);
   };
+
+  const handleAddClick = () => {
+    console.log('Add button clicked!');
+    setIsAddModalOpen(true);
+  };
+
+  console.log('Modal state:', isAddModalOpen);
 
   if (loading) {
     return <div className="p-4">Ładowanie listy produktów...</div>;
@@ -38,6 +49,7 @@ const ProductList: React.FC = () => {
   return (
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Lista produktów</h2>
+
       <table className="w-full border border-gray-300">
         <thead>
           <tr>
@@ -60,6 +72,14 @@ const ProductList: React.FC = () => {
           ))}
         </tbody>
       </table>
+
+      <AddButton onClick={handleAddClick} />
+
+      <AddProductModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={loadProducts}
+      />
     </div>
   );
 };

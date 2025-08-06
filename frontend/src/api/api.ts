@@ -17,3 +17,18 @@ export const fetchProducts = async (token: string = DEFAULT_TOKEN) => {
     throw error;
   }
 };
+
+export const createProduct = async (product: { name: string; quantity: number }, token: string = DEFAULT_TOKEN) => {
+  try {
+    const response = await axios.post(`${API_URL}/products`, product, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+};
