@@ -32,3 +32,19 @@ export const createProduct = async (product: { name: string; quantity: number },
     throw error;
   }
 };
+
+export const updateProductAmount = async (productId: number, amount: number, token: string = DEFAULT_TOKEN) => {
+  try {
+    const response = await axios.post(`${API_URL}/products/${productId}/update`, { amount }, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+};
+

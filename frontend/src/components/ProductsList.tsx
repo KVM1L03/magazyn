@@ -3,6 +3,7 @@ import { fetchProducts } from '../api/api';
 import EditButton from './EditButton';
 import AddButton from './AddButton';
 import AddProductModal from './AddProductModal';
+import EditProductModal from './EditProductModal';
 
 interface Product {
   id: number;
@@ -14,6 +15,8 @@ const ProductList: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
 
   const loadProducts = async () => {
     try {
@@ -32,7 +35,8 @@ const ProductList: React.FC = () => {
   }, []);
 
   const handleEdit = (productId: number) => {
-    console.log('Edit product:', productId);
+    setSelectedProductId(productId);
+    setIsEditModalOpen(true);
   };
 
   const handleAddClick = () => {
@@ -80,6 +84,18 @@ const ProductList: React.FC = () => {
         onClose={() => setIsAddModalOpen(false)}
         onSuccess={loadProducts}
       />
+
+      {selectedProductId && (
+        <EditProductModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedProductId(null);
+          }}
+          onSuccess={loadProducts}
+          productId={selectedProductId}
+        />
+      )}
     </div>
   );
 };
