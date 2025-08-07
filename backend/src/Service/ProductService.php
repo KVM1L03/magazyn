@@ -10,7 +10,8 @@ class ProductService
 {
     public function __construct(
         private EntityManagerInterface $em
-    ) {}
+    ) {
+    }
 
     public function updateStock(Product $product, int $amount): void
     {

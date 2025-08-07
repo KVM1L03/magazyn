@@ -12,7 +12,8 @@ class AccessTokenHandler implements AccessTokenHandlerInterface
 {
     public function __construct(
         private EntityManagerInterface $em
-    ) {}
+    ) {
+    }
 
     public function getUserBadgeFrom(string $accessToken): UserBadge
     {
