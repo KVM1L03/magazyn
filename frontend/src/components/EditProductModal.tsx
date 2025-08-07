@@ -49,7 +49,6 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
               value={quantity}
               onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
               className="w-full border text-black border-gray-300 rounded px-3 py-2 focus:border-blue-500"
-              min="0"
               required
               disabled={isLoading}
             />
