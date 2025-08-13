@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\Entity\Product;
 use App\Service\ProductService;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -13,53 +12,79 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 #[Route('/api/products')]
 final class ProductController extends AbstractController
 {
+    public function __construct(
+        private ProductService $productService
+    ) {
+    }
+
     #[Route('', methods: ['GET'])]
-    public function list(EntityManagerInterface $em): JsonResponse
+    public function list(): JsonResponse
     {
-        $products = $em->getRepository(Product::class)->findAll();
+        $products = $this->productService->getAllProducts();
 
-        $data = array_map(fn($p) => [
-            'id' => $p->getId(),
-            'name' => $p->getName(),
-            'quantity' => $p->getCurrentQuantity(),
-        ], $products);
+        $data = [];
+        foreach ($products as $p) {
+            $data[] = [
+                'id' => $p->getId(),
+                'name' => $p->getName(),
+                'quantity' => $p->getCurrentQuantity(),
+            ];
+        }
 
-        return new JsonResponse($data);
+        return new JsonResponse([
+            'products' => $data,
+            'count' => count($data)
+        ]);
     }
 
     #[Route('', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $em): JsonResponse
+    public function create(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
-        $product = new Product();
-        $product->setName($data['name']);
-        $product->setCurrentQuantity($data['quantity']);
+        $product = $this->productService->createProduct(
+            $data['name'],
+            $data['quantity']
+        );
 
-        $em->persist($product);
-        $em->flush();
-
-        return new JsonResponse(['status' => 'created'], 201);
+        return new JsonResponse([
+            'product' => [
+                'id' => $product->getId(),
+                'name' => $product->getName(),
+                'quantity' => $product->getCurrentQuantity(),
+            ],
+            'status' => 'created'
+        ], 201);
     }
 
     #[Route('/{id}', methods: ['GET'])]
     public function detail(Product $product): JsonResponse
     {
         return new JsonResponse([
-            'id' => $product->getId(),
-            'name' => $product->getName(),
-            'quantity' => $product->getCurrentQuantity(),
+            'product' => [
+                'id' => $product->getId(),
+                'name' => $product->getName(),
+                'quantity' => $product->getCurrentQuantity(),
+            ],
+            'status' => 'success'
         ]);
     }
 
     #[Route('/{id}/update', methods: ['POST'])]
-    public function updateStock(Product $product, Request $request, ProductService $productService): JsonResponse
+    public function updateStock(Product $product, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
         $amount = $data['amount'];
 
-        $productService->updateStock($product, $amount);
+        $this->productService->updateStock($product, $amount);
 
-        return new JsonResponse(['status' => 'updated']);
+        return new JsonResponse([
+            'product' => [
+                'id' => $product->getId(),
+                'name' => $product->getName(),
+                'quantity' => $product->getCurrentQuantity(),
+            ],
+            'status' => 'stock updated'
+        ]);
     }
 }
