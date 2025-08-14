@@ -1,70 +1,85 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Service;
 
+use App\DTO\ProductCreateRequest;
 use App\Entity\Product;
-use App\Entity\InventoryChange;
+use App\Repository\ProductRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ProductService
 {
     public function __construct(
-        private EntityManagerInterface $em
+        private ProductRepository $productRepository,
+        private EntityManagerInterface $entityManager,
+        private ValidatorInterface $validator
     ) {
     }
 
     public function getAllProducts(): array
     {
-        return $this->em->getRepository(Product::class)->findAll();
+        return $this->productRepository->findAll();
     }
 
     public function getProductById(int $id): ?Product
     {
-        return $this->em->getRepository(Product::class)->find($id);
+        return $this->productRepository->find($id);
     }
 
-    public function createProduct(string $name, int $quantity): Product
+    public function createProduct($name, $quantity): Product
     {
-        $product = new Product();
-        $product->setName($name);
-        $product->setCurrentQuantity($quantity);
+        if (!is_string($name) && $name !== null) {
+            throw new \InvalidArgumentException('Nazwa produktu musi być tekstem');
+        }
+        
+        if (!is_numeric($quantity) && $quantity !== null) {
+            throw new \InvalidArgumentException('Ilość musi być liczbą');
+        }
 
-        $this->em->persist($product);
-        $this->em->flush();
+        $name = (string) ($name ?? '');
+        $quantity = (int) ($quantity ?? 0);
+        
+        $dto = new ProductCreateRequest($name, $quantity);
+
+        $errors = $this->validator->validate($dto);
+        
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[] = $error->getMessage();
+            }
+            throw new \InvalidArgumentException(implode(', ', $errorMessages));
+        }
+
+        $product = new Product();
+        $product->setName($dto->name);
+        $product->setCurrentQuantity($dto->quantity);
+
+        $this->entityManager->persist($product);
+        $this->entityManager->flush();
 
         return $product;
     }
 
-    public function updateStock(Product $product, int $amount): void
+    public function updateStock(Product $product, $amount): void
     {
-        $change = new InventoryChange();
-        $change->setProduct($product);
-        $change->setAmount($amount);
-        $change->setCreatedAt(new \DateTimeImmutable());
-
-        $product->setCurrentQuantity($product->getCurrentQuantity() + $amount);
-
-        $this->em->persist($change);
-        $this->em->persist($product);
-        $this->em->flush();
-    }
-
-    public function updateProduct(Product $product, array $data): void
-    {
-        if (isset($data['name'])) {
-            $product->setName($data['name']);
+        if (!is_numeric($amount)) {
+            throw new \InvalidArgumentException('Wartość amount musi być liczbą');
         }
-        if (isset($data['quantity'])) {
-            $product->setCurrentQuantity($data['quantity']);
+        
+        $amount = (int) $amount;
+        $newQuantity = $product->getCurrentQuantity() + $amount;
+        
+        if ($newQuantity < 0) {
+            throw new \InvalidArgumentException('Ilość produktu nie może być ujemna');
         }
-
-        $this->em->persist($product);
-        $this->em->flush();
+        
+        $product->setCurrentQuantity($newQuantity);
+        $this->entityManager->flush();
     }
 
-    public function deleteProduct(Product $product): void
-    {
-        $this->em->remove($product);
-        $this->em->flush();
-    }
+
+   
 }
