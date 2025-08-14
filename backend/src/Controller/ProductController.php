@@ -3,13 +3,17 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\DTO\ProductCreateRequest;
+use App\DTO\UpdateStockRequest;
 use App\Entity\Product;
 use App\Service\ProductService;
 use App\Trait\ValidationErrorHandler;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/products')]
 final class ProductController extends AbstractController
@@ -17,31 +21,19 @@ final class ProductController extends AbstractController
     use ValidationErrorHandler;
 
     public function __construct(
-        private ProductService $productService
+        private ProductService $productService,
+        private ValidatorInterface $validator
     ) {
     }
 
     #[Route('', methods: ['POST'])]
-    public function create(Request $request): JsonResponse
-    {
-        $data = json_decode($request->getContent(), true);
-        
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return new JsonResponse([
-                'errors' => [
-                    [
-                        'property' => 'json',
-                        'message' => 'Niepoprawny format JSON'
-                    ]
-                ],
-                'status' => 'validation_error'
-            ], 422);
-        }
-
+    public function create(
+        #[MapRequestPayload] ProductCreateRequest $request
+    ): JsonResponse {
         try {
             $product = $this->productService->createProduct(
-                $data['name'] ?? null,
-                $data['quantity'] ?? null
+                $request->name,
+                $request->quantity
             );
 
             return new JsonResponse([
@@ -100,24 +92,12 @@ final class ProductController extends AbstractController
     }
 
     #[Route('/{id}/update', methods: ['POST'])]
-    public function updateStock(Product $product, Request $request): JsonResponse
-    {
-        $data = json_decode($request->getContent(), true);
-        
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return new JsonResponse([
-                'errors' => [
-                    [
-                        'property' => 'json',
-                        'message' => 'Niepoprawny format JSON'
-                    ]
-                ],
-                'status' => 'validation_error'
-            ], 422);
-        }
-
+    public function updateStock(
+        Product $product, 
+        #[MapRequestPayload] UpdateStockRequest $request
+    ): JsonResponse {
         try {
-            $this->productService->updateStock($product, $data['amount'] ?? null);
+            $this->productService->updateStock($product, $request->amount);
 
             return new JsonResponse([
                 'product' => [

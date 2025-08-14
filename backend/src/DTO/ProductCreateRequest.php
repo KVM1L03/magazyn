@@ -7,6 +7,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class ProductCreateRequest
 {
+    #[Assert\Type(
+        type: 'string',
+        message: 'Nazwa produktu musi być tekstem'
+    )]
     #[Assert\NotBlank(message: "Nazwa produktu nie może być pusta")]
     #[Assert\Length(
         min: 2,
@@ -16,10 +20,9 @@ class ProductCreateRequest
     )]
     public string $name;
 
-    #[Assert\NotNull(message: "Ilość produktu nie może być pusta")]
     #[Assert\Type(
         type: 'integer',
-        message: "Ilość musi być liczbą całkowitą"
+        message: 'Ilość musi być liczbą całkowitą'
     )]
     #[Assert\GreaterThanOrEqual(
         value: 0,
@@ -33,4 +36,3 @@ class ProductCreateRequest
         $this->quantity = $quantity;
     }
 }
-
